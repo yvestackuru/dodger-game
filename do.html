@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Retro Dodger</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000 url('https://i.imgur.com/FYbWJcE.jpg') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+      font-family: 'Press Start 2P', monospace;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      touch-action: none;
+      image-rendering: pixelated;
+      background: transparent;
+    }
+    #score, #difficulty {
+      position: absolute;
+      left: 10px;
+      color: #0f0;
+      font-size: 12px;
+      z-index: 2;
+    }
+    #score { top: 10px; }
+    #difficulty { top: 30px; }
+
+    #playAgain {
+      display: none;
+      position: absolute;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 12px 24px;
+      font-size: 10px;
+      font-family: 'Press Start 2P', monospace;
+      background: #0f0;
+      color: #000;
+      border: 2px solid #000;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 2;
+      user-select: none;
+    }
+
+    #mobileControls {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 30px;
+      z-index: 3;
+    }
+
+    #mobileControls button {
+      width: 60px;
+      height: 60px;
+      background: #0f0;
+      color: #000;
+      border: 3px solid #000;
+      border-radius: 12px;
+      font-size: 32px;
+      font-family: 'Press Start 2P', monospace;
+      user-select: none;
+      touch-action: none;
+    }
+
+    @media (min-width: 768px) {
+      #mobileControls {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="score">SCORE: 0</div>
+  <div id="difficulty">DIFFICULTY: 1</div>
+  <button id="playAgain">PLAY AGAIN</button>
+
+  <div id="mobileControls">
+    <button id="leftBtn">◀</button>
+    <button id="rightBtn">▶</button>
+  </div>
+
+  <audio id="bgMusic" autoplay loop>
+    <source src="chiptune.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+    const difficultyDisplay = document.getElementById('difficulty');
+    const playAgainBtn = document.getElementById('playAgain');
+    const bgMusic = document.getElementById("bgMusic");
+
+    let width, height;
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+
+      player.y = height - 200;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    let player = {
+      x: 0,
+      y: 0,
+      width: 50,
+      height: 50,
+      speed: 7,
+      dx: 0
+    };
+
+    let obstacles = [];
+    let score = 0;
+    let gameOver = false;
+
+    function startAudio() {
+      if (bgMusic && bgMusic.paused) {
+        bgMusic.play().catch(() => {
+          console.log("Audio autoplay blocked.");
+        });
+      }
+    }
+
+    document.addEventListener("click", startAudio, { once: true });
+    document.addEventListener("touchstart", startAudio, { once: true });
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, width, height);
+    }
+
+    function drawPixelBox(x, y, w, h, fill, stroke = "#000") {
+      ctx.fillStyle = fill;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, w, h);
+    }
+
+    function drawPlayer() {
+      drawPixelBox(player.x, player.y, player.width, player.height, "#0ff");
+    }
+
+    function drawObstacles() {
+      for (let obs of obstacles) {
+        drawPixelBox(obs.x, obs.y, obs.width, obs.height, "#f00");
+      }
+    }
+
+    function updateObstacles() {
+      for (let i = 0; i < obstacles.length; i++) {
+        const baseSpeed = 4;
+        const speedMultiplier = Math.min(10, 1 + score / 10);
+        obstacles[i].y += baseSpeed * speedMultiplier;
+
+        if (obstacles[i].y > height) {
+          obstacles.splice(i, 1);
+          score++;
+          scoreDisplay.textContent = `SCORE: ${score}`;
+          const difficulty = Math.floor(score / 10) + 1;
+          difficultyDisplay.textContent = `DIFFICULTY: ${difficulty}`;
+        }
+
+        if (
+          obstacles[i] &&
+          player.x < obstacles[i].x + obstacles[i].width &&
+          player.x + player.width > obstacles[i].x &&
+          player.y < obstacles[i].y + obstacles[i].height &&
+          player.y + player.height > obstacles[i].y
+        ) {
+          gameOver = true;
+          playAgainBtn.style.display = "block";
+        }
+      }
+    }
+
+    function spawnObstacle() {
+      const w = Math.random() * 70 + 80;
+      const x = Math.random() * (canvas.width - w);
+      obstacles.push({ x: x, y: -60, width: w, height: 60 });
+    }
+
+    function movePlayer() {
+      player.x += player.dx;
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > width) player.x = width - player.width;
+      if (player.y + player.height > height) player.y = height - player.height - 20;
+    }
+
+    function update() {
+      clearCanvas();
+
+      if (gameOver) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "16px 'Press Start 2P'";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", width / 2, height / 2 - 40);
+        return;
+      }
+
+      drawPlayer();
+      drawObstacles();
+      updateObstacles();
+      movePlayer();
+
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") player.dx = -player.speed;
+      else if (e.key === "ArrowRight") player.dx = player.speed;
+    });
+
+    document.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") player.dx = 0;
+    });
+
+    canvas.addEventListener("touchstart", e => {
+      const x = e.touches[0].clientX;
+      if (x < width / 2) player.dx = -player.speed;
+      else player.dx = player.speed;
+    });
+
+    canvas.addEventListener("touchend", () => player.dx = 0);
+
+    playAgainBtn.addEventListener("click", () => {
+      restart();
+    });
+
+    function restart() {
+      obstacles = [];
+      score = 0;
+      player.x = width / 2 - 25;
+      player.y = height - 200;
+      gameOver = false;
+      scoreDisplay.textContent = `SCORE: 0`;
+      difficultyDisplay.textContent = `DIFFICULTY: 1`;
+      playAgainBtn.style.display = "none";
+
+      if (bgMusic) {
+        bgMusic.currentTime = 0;
+        bgMusic.play().catch(() => console.log("Audio play failed."));
+      }
+
+      update();
+    }
+
+    setInterval(() => {
+      if (!gameOver) spawnObstacle();
+    }, 800);
+
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+
+    let leftPressed = false;
+    let rightPressed = false;
+
+    leftBtn.addEventListener('touchstart', () => {
+      leftPressed = true;
+      player.dx = -player.speed;
+    });
+    leftBtn.addEventListener('touchend', () => {
+      leftPressed = false;
+      if (!rightPressed) player.dx = 0;
+    });
+
+    rightBtn.addEventListener('touchstart', () => {
+      rightPressed = true;
+      player.dx = player.speed;
+    });
+    rightBtn.addEventListener('touchend', () => {
+      rightPressed = false;
+      if (!leftPressed) player.dx = 0;
+    });
+
+    // Final setup
+    resizeCanvas();
+    player.x = width / 2 - 25;
+    player.y = height - 100;
+    update();
+  </script>
+</body>
+</html>
