@@ -10,7 +10,8 @@
     html, body {
       width: 100%;
       height: 100%;
-      background: #000;
+      background: #000 url('https://i.imgur.com/FYbWJcE.jpg') no-repeat center center;
+      background-size: cover;
       overflow: hidden;
       font-family: 'Press Start 2P', monospace;
     }
@@ -45,18 +46,44 @@
       border: 2px solid #000;
       border-radius: 4px;
       cursor: pointer;
-      z-index: 2;
+      z-index: 9999; /* ⬅️ Ensure it's on top of everything */
       user-select: none;
     }
 
     #mobileControls {
       position: absolute;
-      bottom: 20px;
+      bottom: 0;
       width: 100%;
+      height:100%;
       display: flex;
       justify-content: space-between;
-      padding: 0 30px;
       z-index: 3;
+    }
+
+    #leftZone, #rightZone {
+  width: 50%;
+  height: 100%;
+  opacity: 0; /* Invisible */
+  touch-action: none;
+    }
+
+    #mobileControls button {
+      width: 60px;
+      height: 60px;
+      background: #0f0;
+      color: #000;
+      border: 3px solid #000;
+      border-radius: 12px;
+      font-size: 32px;
+      font-family: 'Press Start 2P', monospace;
+      user-select: none;
+      touch-action: none;
+    }
+
+    @media (min-width: 768px) {
+      #mobileControls {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -66,8 +93,8 @@
   <button id="playAgain">PLAY AGAIN</button>
 
   <div id="mobileControls">
-    <button id="leftBtn">◀</button>
-    <button id="rightBtn">▶</button>
+    <button id="leftZone">◀</button>
+    <button id="rightZone">▶</button>
   </div>
 
   <audio id="bgMusic" autoplay loop>
@@ -93,7 +120,7 @@
       canvas.width = width;
       canvas.height = height;
 
-      player.y = height - 200;
+      player.y = height - 100;
     }
 
     window.addEventListener("resize", resizeCanvas);
@@ -228,7 +255,7 @@
       obstacles = [];
       score = 0;
       player.x = width / 2 - 25;
-      player.y = height - 200;
+      player.y = height - 100;
       gameOver = false;
       scoreDisplay.textContent = `SCORE: 0`;
       difficultyDisplay.textContent = `DIFFICULTY: 1`;
@@ -249,26 +276,23 @@
     const leftBtn = document.getElementById('leftBtn');
     const rightBtn = document.getElementById('rightBtn');
 
-    let leftPressed = false;
-    let rightPressed = false;
+    
+    const leftZone = document.getElementById('leftZone');
+const rightZone = document.getElementById('rightZone');
 
-    leftBtn.addEventListener('touchstart', () => {
-      leftPressed = true;
-      player.dx = -player.speed;
-    });
-    leftBtn.addEventListener('touchend', () => {
-      leftPressed = false;
-      if (!rightPressed) player.dx = 0;
-    });
+leftZone.addEventListener('touchstart', () => {
+  player.dx = -player.speed;
+});
+leftZone.addEventListener('touchend', () => {
+  if (player.dx < 0) player.dx = 0;
+});
 
-    rightBtn.addEventListener('touchstart', () => {
-      rightPressed = true;
-      player.dx = player.speed;
-    });
-    rightBtn.addEventListener('touchend', () => {
-      rightPressed = false;
-      if (!leftPressed) player.dx = 0;
-    });
+rightZone.addEventListener('touchstart', () => {
+  player.dx = player.speed;
+});
+rightZone.addEventListener('touchend', () => {
+  if (player.dx > 0) player.dx = 0;
+});
 
     // Final setup
     resizeCanvas();
@@ -278,3 +302,4 @@
   </script>
 </body>
 </html>
+
