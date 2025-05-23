@@ -114,7 +114,7 @@
       canvas.height = height;
 
       // Keep player visible on resize
-      player.y = height - 100;
+      player.y = height - 150;
     }
 
     window.addEventListener("resize", resizeCanvas);
@@ -273,7 +273,7 @@
       obstacles = [];
       score = 0;
       player.x = width / 2 - 25;
-      player.y = height - 100;
+      player.y = height - 150;
       gameOver = false;
       scoreDisplay.textContent = `SCORE: 0`;
       difficultyDisplay.textContent = `DIFFICULTY: 1`;
