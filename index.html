@@ -62,7 +62,7 @@
     #leftZone, #rightZone {
   width: 50%;
   height: 100%;
-  opacity: 0; /* Invisible */
+  opacity: 0; /* Completely visible */
   touch-action: none;
     }
 
@@ -279,19 +279,27 @@
     const leftZone = document.getElementById('leftZone');
 const rightZone = document.getElementById('rightZone');
 
+let leftPressed = false;
+let rightPressed = false;
+
 leftZone.addEventListener('touchstart', () => {
+  leftPressed = true;
   player.dx = -player.speed;
 });
 leftZone.addEventListener('touchend', () => {
-  if (player.dx < 0) player.dx = 0;
+  leftPressed = false;
+  if (!rightPressed) player.dx = 0;
 });
 
 rightZone.addEventListener('touchstart', () => {
+  rightPressed = true;
   player.dx = player.speed;
 });
 rightZone.addEventListener('touchend', () => {
-  if (player.dx > 0) player.dx = 0;
+  rightPressed = false;
+  if (!leftPressed) player.dx = 0;
 });
+
 
     // Final setup
     resizeCanvas();
