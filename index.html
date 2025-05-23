@@ -10,7 +10,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      background: #000; /* pure black*/
+      background-color: #000000dd; /* Black background */
       overflow: hidden;
       font-family: 'Press Start 2P', monospace;
     }
@@ -45,39 +45,26 @@
       border: 2px solid #000;
       border-radius: 4px;
       cursor: pointer;
-      z-index: 9999; /* ⬅️ Ensure it's on top of everything */
+      z-index: 3;
       user-select: none;
     }
 
+    /* Full-screen invisible touch zones */
     #mobileControls {
       position: absolute;
-      bottom: 0;
+      top: 0;
       width: 100%;
-      height:100%;
+      height: 100%;
       display: flex;
       justify-content: space-between;
       z-index: 3;
     }
 
     #leftZone, #rightZone {
-  width: 50%;
-  height: 100%;
-  opacity: 0; /* Completely visible */
-  touch-action: none;
-    }
+  background: transparent;
+  opacity: 0;
+}
 
-    #mobileControls button {
-      width: 60px;
-      height: 60px;
-      background: #0f0;
-      color: #000;
-      border: 3px solid #000;
-      border-radius: 12px;
-      font-size: 32px;
-      font-family: 'Press Start 2P', monospace;
-      user-select: none;
-      touch-action: none;
-    }
 
     @media (min-width: 768px) {
       #mobileControls {
@@ -91,9 +78,10 @@
   <div id="difficulty">DIFFICULTY: 1</div>
   <button id="playAgain">PLAY AGAIN</button>
 
+  <!-- Invisible touch zones for mobile -->
   <div id="mobileControls">
-    <button id="leftZone">◀</button>
-    <button id="rightZone">▶</button>
+    <div id="leftZone"></div>
+    <div id="rightZone"></div>
   </div>
 
   <audio id="bgMusic" autoplay loop>
@@ -111,6 +99,9 @@
     const playAgainBtn = document.getElementById('playAgain');
     const bgMusic = document.getElementById("bgMusic");
 
+    const leftZone = document.getElementById('leftZone');
+    const rightZone = document.getElementById('rightZone');
+
     let width, height;
 
     function resizeCanvas() {
@@ -118,7 +109,6 @@
       height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
-
       player.y = height - 100;
     }
 
@@ -238,14 +228,6 @@
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") player.dx = 0;
     });
 
-    canvas.addEventListener("touchstart", e => {
-      const x = e.touches[0].clientX;
-      if (x < width / 2) player.dx = -player.speed;
-      else player.dx = player.speed;
-    });
-
-    canvas.addEventListener("touchend", () => player.dx = 0);
-
     playAgainBtn.addEventListener("click", () => {
       restart();
     });
@@ -268,45 +250,33 @@
       update();
     }
 
-    setInterval(() => {
-      if (!gameOver) spawnObstacle();
-    }, 800);
+    // Touch controls
+    leftZone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      player.dx = -player.speed;
+    });
+    leftZone.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      player.dx = 0;
+    });
 
-    const leftBtn = document.getElementById('leftBtn');
-    const rightBtn = document.getElementById('rightBtn');
+    rightZone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      player.dx = player.speed;
+    });
+    rightZone.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      player.dx = 0;
+    });
 
-    
-    const leftZone = document.getElementById('leftZone');
-const rightZone = document.getElementById('rightZone');
-
-let leftPressed = false;
-let rightPressed = false;
-
-leftZone.addEventListener('touchstart', () => {
-  leftPressed = true;
-  player.dx = -player.speed;
-});
-leftZone.addEventListener('touchend', () => {
-  leftPressed = false;
-  if (!rightPressed) player.dx = 0;
-});
-
-rightZone.addEventListener('touchstart', () => {
-  rightPressed = true;
-  player.dx = player.speed;
-});
-rightZone.addEventListener('touchend', () => {
-  rightPressed = false;
-  if (!leftPressed) player.dx = 0;
-});
-
-
-    // Final setup
+    // Game start
     resizeCanvas();
     player.x = width / 2 - 25;
     player.y = height - 100;
     update();
+    setInterval(() => {
+      if (!gameOver) spawnObstacle();
+    }, 800);
   </script>
 </body>
 </html>
-
