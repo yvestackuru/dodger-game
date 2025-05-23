@@ -71,6 +71,24 @@
         display: none;
       }
     }
+
+    #touchControls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 999;
+}
+
+#leftZone, #rightZone {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  touch-action: none;
+}
+
   </style>
 </head>
 <body>
@@ -219,6 +237,25 @@
       requestAnimationFrame(update);
     }
 
+    const leftZone = document.getElementById('leftZone');
+const rightZone = document.getElementById('rightZone');
+
+leftZone.addEventListener('touchstart', () => {
+  player.dx = -player.speed;
+});
+
+rightZone.addEventListener('touchstart', () => {
+  player.dx = player.speed;
+});
+
+leftZone.addEventListener('touchend', () => {
+  player.dx = 0;
+});
+
+rightZone.addEventListener('touchend', () => {
+  player.dx = 0;
+});
+
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft") player.dx = -player.speed;
       else if (e.key === "ArrowRight") player.dx = player.speed;
@@ -277,6 +314,12 @@
     setInterval(() => {
       if (!gameOver) spawnObstacle();
     }, 800);
+    
+    <div id="touchControls">
+  <div id="leftZone"></div>
+  <div id="rightZone"></div>
+</div>
+
   </script>
 </body>
 </html>
